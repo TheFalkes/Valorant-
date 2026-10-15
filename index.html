@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>PH Command Center</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0b0b0e;
+            --card-bg: rgba(22, 22, 29, 0.7);
+            --card-border: rgba(255, 255, 255, 0.08);
+            --primary: #ff9900;
+            --primary-gradient: linear-gradient(135deg, #ff9900, #ff5500);
+            --text-main: #ffffff;
+            --text-muted: #9ca3af;
+        }
+
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; }
+        
+        body {
+            margin: 0;
+            padding: 20px 16px;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 480px;
+        }
+
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .app-title {
+            font-size: 22px;
+            font-weight: 800;
+            color: var(--primary);
+            margin: 0;
+            letter-spacing: -0.5px;
+        }
+
+        /* Sélecteur Vidéos / Photos */
+        .type-selector {
+            display: flex;
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            padding: 4px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+
+        .type-btn {
+            flex: 1;
+            padding: 10px;
+            text-align: center;
+            font-size: 13px;
+            font-weight: 700;
+            border-radius: 9px;
+            color: var(--text-muted);
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .type-btn.active {
+            background: var(--primary);
+            color: #000;
+        }
+
+        /* Bouton Aléatoire Principal */
+        .main-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            width: 100%;
+            background: var(--primary-gradient);
+            color: #000;
+            padding: 18px;
+            text-decoration: none;
+            font-size: 16px;
+            font-weight: 700;
+            border-radius: 14px;
+            box-shadow: 0 4px 20px rgba(255, 153, 0, 0.25);
+            margin-bottom: 24px;
+            border: none;
+            cursor: pointer;
+            transition: transform 0.1s;
+        }
+        .main-btn:active { transform: scale(0.98); }
+
+        .section-header {
+            margin: 0 0 12px 4px;
+        }
+
+        .section-title {
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-muted);
+            font-weight: 700;
+        }
+
+        /* Système de Deck de Cartes */
+        .deck-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .deck-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 14px;
+            padding: 16px;
+            text-decoration: none;
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            min-height: 105px;
+            cursor: pointer;
+            transition: border-color 0.2s, transform 0.1s;
+            position: relative;
+            overflow: hidden;
+        }
+        .deck-card:hover { border-color: var(--primary); }
+        .deck-card:active { transform: scale(0.97); }
+
+        .deck-card-title {
+            font-size: 15px;
+            font-weight: 700;
+            z-index: 2;
+        }
+
+        .deck-card-sub {
+            font-size: 12px;
+            color: var(--text-muted);
+            z-index: 2;
+            margin-top: 6px;
+        }
+
+        .deck-card-icon {
+            position: absolute;
+            right: 10px;
+            bottom: 10px;
+            font-size: 28px;
+            opacity: 0.15;
+        }
+
+        footer { text-align: center; margin-top: 30px; font-size: 11px; color: #555; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <!-- Barre de titre -->
+        <div class="top-bar">
+            <h1 class="app-title">PH Command Center</h1>
+        </div>
+
+        <!-- Sélecteur Vidéos / Photos -->
+        <div class="type-selector">
+            <button class="type-btn active" id="btn-video" onclick="setMode('video')">📹 Vidéos</button>
+            <button class="type-btn" id="btn-photo" onclick="setMode('photo')">🖼️ Photos & Albums</button>
+        </div>
+
+        <!-- Bouton Aléatoire Dynamique -->
+        <button class="main-btn" onclick="openRandom()">
+            <span id="random-icon">🎲</span> <span id="random-text">Lancer une Vidéo 100% Aléatoire</span>
+        </button>
+
+        <!-- Section Deck de Cartes Thématiques -->
+        <div class="section-header">
+            <div class="section-title" id="deck-section-title">Sélections & Decks Populaires</div>
+        </div>
+
+        <div class="deck-container" id="deck-grid">
+            <!-- Rempli dynamiquement par JS selon le mode Vidéo / Photo -->
+        </div>
+
+        <footer>Command Center • 2026</footer>
+    </div>
+
+    <script>
+        let currentMode = 'video';
+
+        const videoDecks = [
+            { title: "Amateur Réel", sub: "Contenu authentique", icon: "📹", query: "amateur" },
+            { title: "Français Spécial", sub: "Sélection FR", icon: "🇫🇷", query: "french" },
+            { title: "Populaires HD", sub: "Les plus regardés", icon: "🔥", query: "popular" },
+            { title: "Tendances du moment", sub: "Flux actif", icon: "⚡", query: "trending" }
+        ];
+
+        const photoDecks = [
+            { title: "Top Albums", sub: "Galeries complètes", icon: "🖼️", query: "albums" },
+            { title: "Amateur Photos", sub: "Clichés réels", icon: "📸", query: "amateur" },
+            { title: "Modèles & Cosplay", sub: "Sélections photos", icon: "✨", query: "cosplay" },
+            { title: "Tendances Albums", sub: "Nouveautés images", icon: "🌟", query: "popular" }
+        ];
+
+        function setMode(mode) {
+            currentMode = mode;
+            document.getElementById('btn-video').classList.toggle('active', mode === 'video');
+            document.getElementById('btn-photo').classList.toggle('active', mode === 'photo');
+
+            if (mode === 'video') {
+                document.getElementById('random-icon').innerText = '🎲';
+                document.getElementById('random-text').innerText = 'Lancer une Vidéo 100% Aléatoire';
+                document.getElementById('deck-section-title').innerText = 'Sélections Vidéos';
+            } else {
+                document.getElementById('random-icon').innerText = '🎲';
+                document.getElementById('random-text').innerText = 'Lancer un Album 100% Aléatoire';
+                document.getElementById('deck-section-title').innerText = 'Sélections Photos & Albums';
+            }
+            renderDeck();
+        }
+
+        function renderDeck() {
+            const grid = document.getElementById('deck-grid');
+            const items = currentMode === 'video' ? videoDecks : photoDecks;
+
+            grid.innerHTML = items.map(item => {
+                const targetUrl = currentMode === 'video' 
+                    ? `https://fr.pornhub.com/video/search?search=${encodeURIComponent(item.query)}`
+                    : `https://fr.pornhub.com/albums?search=${encodeURIComponent(item.query)}`;
+
+                return `
+                    <a href="${targetUrl}" target="_blank" class="deck-card">
+                        <div>
+                            <div class="deck-card-title">${item.title}</div>
+                            <div class="deck-card-sub">${item.sub}</div>
+                        </div>
+                        <div class="deck-card-icon">${item.icon}</div>
+                    </a>
+                `;
+            }).join('');
+        }
+
+        function openRandom() {
+            if (currentMode === 'video') {
+                // Lien direct vers une vidéo aléatoire Pornhub
+                window.open('https://fr.pornhub.com/random', '_blank');
+            } else {
+                // Recherche d'albums aléatoires
+                const randomQueries = ["amateur", "hot", "babe", "model", "sensual", "couples"];
+                const q = randomQueries[Math.floor(Math.random() * randomQueries.length)];
+                window.open(`https://fr.pornhub.com/albums?search=${encodeURIComponent(q)}`, '_blank');
+            }
+        }
+
+        // Initialisation au chargement
+        renderDeck();
+    </script>
+</body>
+</html>
